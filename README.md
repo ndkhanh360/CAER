@@ -1,8 +1,8 @@
-<<<<<<< HEAD
 # CAER-S
  [![License: MIT](https://img.shields.io/badge/License-MIT-red.svg)](https://opensource.org/licenses/MIT)
- 
- This is our Pytorch implementation for the baselines in the paper [Context-Aware Emotion Recognition Networks](https://caer-dataset.github.io/file/JiyoungLee_iccv2019_CAER-Net.pdf)
+ [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1PmyTWPNCn3NNNXMIwrFh4gH0UXoPi9AJ?usp=sharing)
+
+ This is my Pytorch implementation for the baselines in the paper [Context-Aware Emotion Recognition Networks](https://caer-dataset.github.io/file/JiyoungLee_iccv2019_CAER-Net.pdf)
 
 ## Installation
 First, clone this repository
@@ -95,7 +95,7 @@ Move into `Baseline` directory and modify `config.json` file
   "optimizer": {
     "type": "Adam",
     "args":{
-      "lr": 1e-4,                     // learning rate
+      "lr": 1e-4,                      // learning rate
       "weight_decay": 0,               // (optional) weight decay
       "amsgrad": true
     }
