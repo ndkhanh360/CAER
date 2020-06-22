@@ -13,8 +13,6 @@ import torch
 from torch.utils.data import Dataset
 from torchvision.datasets import ImageFolder
 
-import dlib 
-
 def get_path_images(root, test_size=0.0, mode=0):
     """
     Get image paths to create dataset
@@ -38,49 +36,6 @@ def get_path_images(root, test_size=0.0, mode=0):
         return (train[:num_train], train[num_train:]), class_to_idx
     print('Testset size:', len(train))
     return train, class_to_idx
-
-class MyDataset(Dataset):
-    def __init__(self, data, transform=None):
-        self.data = data
-        self.transform = transform
-    
-    def __len__(self):
-        return len(self.data)
-
-    def __getitem__(self, idx):
-        path, label = self.data[idx]
-        image = Image.open(path)
-
-        if self.transform is not None:
-            try:
-                image = self.transform(image)
-            except:
-                return None
-        return image, label
-
-class ExtractFaceContext(object):
-    """
-    Extract facial region and context from an image.
-
-    Args:
-    detector: face detector
-    """
-
-    def __init__(self):
-        self.detector = dlib.get_frontal_face_detector()
-
-    def __call__(self, image):
-        np_img = np.asarray(image)
-        bb = self.detector(np_img, 1)[0]
-        face, context = np_img.copy(), np_img.copy()
-        x1, y1, x2, y2 = bb.left(), bb.top(), bb.right(), bb.bottom()
-        face = face[y1:y2, x1:x2]
-        cv2.rectangle(context, (x1,y1), (x2, y2), (0,0,0), -1)
-
-        return {
-            'face': Image.fromarray(face),
-            'context': Image.fromarray(context)
-        }
 
 class ResizeFaceContext(object):
     """
@@ -140,20 +95,18 @@ class ToTensorAndNormalize(object):
     def __call__(self, sample):
         face, context = sample['face'].convert("RGB"), sample['context'].convert("RGB")
         toTensor = transforms.ToTensor()
-        normalize = transforms.Normalize(
-                                        mean=[0.5, 0.5, 0.5],
-                                        std=[0.5, 0.5, 0.5])
+        normalize = transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]) 
         return {
             'face': normalize(toTensor(face)),
             'context': normalize(toTensor(context)),
         }
 
 def get_transform(train=True):
-  return transforms.Compose([transforms.Resize(224),
-                            ExtractFaceContext(), # edit this line
-                            ResizeFaceContext((96, (128, 171))),
-                            (Crop(112, "train") if train else Crop(112, "test")),
-                             ToTensorAndNormalize()])
+    return transforms.Compose([
+        ResizeFaceContext((96, (128, 171))),
+        (Crop(112, "train") if train else Crop(112, "test")),
+        ToTensorAndNormalize()
+    ])
 
 def ensure_dir(dirname):
     dirname = Path(dirname)

@@ -41,8 +41,7 @@ class Trainer(BaseTrainer):
         self.train_metrics.reset()
         for batch_idx, (inputs, labels) in enumerate(self.data_loader):
             # debugging
-            # classes = np.unique(labels.numpy())
-            # print('Classes: ', classes)
+            # print('Classes: ', torch.unique(labels))
             face, context = inputs['face'].to(self.device), inputs['context'].to(self.device)
             labels = labels.to(self.device)
             
@@ -51,7 +50,7 @@ class Trainer(BaseTrainer):
             loss = self.criterion(output, labels)
             loss.backward()
             self.optimizer.step()
-
+            
             self.writer.set_step((epoch - 1) * self.len_epoch + batch_idx)
             self.train_metrics.update('loss', loss.item())
             for met in self.metric_ftns:

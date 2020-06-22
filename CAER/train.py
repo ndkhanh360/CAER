@@ -2,15 +2,12 @@ import argparse
 import collections
 import torch
 import numpy as np
-from data_loader.data_loaders import DataLoaderGenerator
+import data_loader.data_loaders as module_data
 import model.loss as module_loss
 import model.metric as module_metric
 import model.model as module_arch
 from parse_config import ConfigParser
 from trainer import Trainer
-import utils.util as ut 
-import matplotlib.pyplot as plt
-import time 
 
 # fix random seeds for reproducibility
 SEED = 123
@@ -19,28 +16,16 @@ torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = False
 np.random.seed(SEED)
 
-
 def main(config):
     logger = config.get_logger('train')
-    print('Preparing data...')
-    generator = DataLoaderGenerator(**config["train_loader"])
-    (train_loader, val_loader), class_to_idx = generator.get_loaders()
-   
+
     # setup data_loader instances
-    # val_loader = CAERDataLoader(val_dset, shuffle=False, **config["loader_args"])
+    data_loader = config.init_obj('train_loader', module_data)
+    valid_data_loader = config.init_obj('val_loader', module_data)
 
     # build model architecture, then print to console
-    print('Preparing model...')
     model = config.init_obj('arch', module_arch)
-    try:
-        if config['resume_training'] is not None:
-            print('Loading checkpoint...')
-            cp = torch.load(config['resume_training'])
-            model.load_state_dict(cp["state_dict"])
-    except:
-        pass 
-
-    # logger.info(model)
+    logger.info(model)
 
     # get function handles of loss and metrics
     criterion = getattr(module_loss, config['loss'])
@@ -54,15 +39,12 @@ def main(config):
 
     trainer = Trainer(model, criterion, metrics, optimizer,
                       config=config,
-                      data_loader=train_loader,
-                      valid_data_loader=val_loader,
-                      lr_scheduler=lr_scheduler)
-    print('Start training...')
-    start = time.time()
+                      data_loader=data_loader,
+                      lr_scheduler=lr_scheduler,
+                      valid_data_loader=valid_data_loader)
+
     trainer.train()
-    time_elapsed = time.time() - start
-    print('Training complete in {:.0f}m {:.0f}s'.format(
-        time_elapsed // 60, time_elapsed % 60))
+
 
 if __name__ == '__main__':
     args = argparse.ArgumentParser(description='PyTorch Template')
