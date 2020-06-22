@@ -40,7 +40,6 @@ def main(config):
     trainer = Trainer(model, criterion, metrics, optimizer,
                       config=config,
                       data_loader=data_loader,
-                    #   lr_scheduler=lr_scheduler,
                       valid_data_loader=valid_data_loader)
 
     trainer.train()

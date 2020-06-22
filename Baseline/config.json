@@ -7,7 +7,7 @@
         "args": {}
     },
     "train_loader": {
-        "type": "BaselineDataLoader",
+        "type": "CAERSDataLoader",
         "args":{
             "root": "data/CAER-S/train",
             "detect_file": "data/train.txt",
@@ -18,7 +18,7 @@
         }
     },
     "test_loader": {
-        "type": "BaselineDataLoader",
+        "type": "CAERSDataLoader",
         "args":{
             "root": "data/CAER-S/test",
             "detect_file": "data/test.txt",
