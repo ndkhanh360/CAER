@@ -3,17 +3,19 @@ from torchvision.datasets import ImageFolder
 from base import BaseDataLoader
 from torch.utils.data import Dataset
 from torch.utils.data.dataloader import default_collate
-from PIL import Image
+from PIL import Image, ImageDraw
 import os
+import utils.util as ut 
 
 def collate_fn(batch):
     batch = list(filter(lambda x: x is not None, batch))
     return default_collate(batch)
     
 class MyDataset(Dataset):
-    def __init__(self, root, input_file, transform=None):
+    def __init__(self, root, input_file, transform=None, use_context=False):
         self.root = root 
         self.transform = transform
+        self.use_context = use_context 
         self.data = self.read_input_file(input_file)
 
     def read_input_file(self, file):
@@ -25,17 +27,28 @@ class MyDataset(Dataset):
     def __getitem__(self, idx):
         if idx >= len(self.data):
             raise IndexError('Index out of bound')
+        sample = self.data[idx].split(',')
+        path, label, x1, y1, x2, y2 = os.path.join(self.root, sample[0]), int(sample[1]), int(sample[2]), int(sample[3]), int(sample[4]), int(sample[5])
+        im = Image.open(path)
+        face = im.crop((x1, y1, x2, y2))
+        if self.use_context:
+            draw = ImageDraw.Draw(im)
+            draw.rectangle((x1, y1, x2, y2), fill=(0, 0, 0))
+            data = {
+                'face': face,
+                'context': im
+            }
+        else:
+            data = face
+
         try:
-            sample = self.data[idx].split(',')
-            path, label, x1, y1, x2, y2 = os.path.join(self.root, sample[0]), int(sample[1]), int(sample[2]), int(sample[3]), int(sample[4]), int(sample[5])
-            image = Image.open(path).crop((x1, y1, x2, y2))
             if self.transform is not None:
-                image = self.transform(image)
+                data = self.transform(data)
         except:
             return None
-        return image, label
+        return data, label
 
-class CAERSDataLoader(BaseDataLoader):
+class BaselineDataLoader(BaseDataLoader):
     def __init__(self, root, detect_file=None, batch_size=32, shuffle=True, validation_split=0.0, num_workers=2):
         """
         Create dataloader from directory
