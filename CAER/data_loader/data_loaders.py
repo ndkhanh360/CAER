@@ -48,7 +48,7 @@ class MyDataset(Dataset):
         return data, label
 
 class CAERSDataLoader(BaseDataLoader):
-    def __init__(self, root, detect_file, train=True, batch_size=32, shuffle=True, num_workers=2):
+    def __init__(self, root, detect_file, use_resnet=False, train=True, batch_size=32, shuffle=True, num_workers=2):
         """
         Create dataloader from directory
         Args:
@@ -56,6 +56,6 @@ class CAERSDataLoader(BaseDataLoader):
             - detect_file (str): file containing results from detector 
         """
         
-        data_transforms = ut.get_transform(train)
+        data_transforms = ut.get_transform(train, use_resnet)
         self.dataset = MyDataset(root, detect_file, data_transforms)
         super().__init__(self.dataset, batch_size, shuffle, validation_split=0.0, num_workers=num_workers, collate_fn=collate_fn)

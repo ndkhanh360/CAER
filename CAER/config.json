@@ -1,10 +1,11 @@
 {
-    "name": "CAERS_debug_session",
+    "name": "CAERS_resnet_session",
     "n_gpu": 1,
     "arch": {
         "type": "CAERSNet",
         "args": {
             "context": true,
+            "use_resnet": true,
             "context_attention": true,
             "fusion_attention": true
         }
@@ -12,8 +13,9 @@
     "train_loader": {
         "type": "CAERSDataLoader",
         "args":{
-            "root": "/media/ndkhanh/01D4AEE761F372D0/Download/data/CAER-S/train", 
-            "detect_file": "data/debug_train.txt",
+            "root": "/content/drive/My Drive/FEG/CAER-S/train",
+            "detect_file": "/content/drive/My Drive/FEG/train.txt",
+            "use_resnet": true,
             "batch_size": 32,
             "shuffle": true,
             "num_workers": 2
@@ -22,8 +24,9 @@
     "val_loader": {
         "type": "CAERSDataLoader",
         "args":{
-            "root": "/media/ndkhanh/01D4AEE761F372D0/Download/data/CAER-S/train", 
-            "detect_file": "data/debug_val.txt",
+            "root": "/content/drive/My Drive/FEG/CAER-S/train",
+            "detect_file": "/content/drive/My Drive/FEG/val.txt",
+            "use_resnet": true,
             "train": false,
             "batch_size": 32,
             "shuffle": false,
@@ -33,7 +36,7 @@
     "optimizer": {
         "type": "Adam",
         "args":{
-            "lr": 5e-3,
+            "lr": 1e-4,
             "weight_decay": 0,
             "amsgrad": true
         }
@@ -55,7 +58,7 @@
         "save_period": 5,
         "verbosity": 2,
         "monitor": "min val_loss",
-        "early_stop": 10,
+        "early_stop": 15,
         "tensorboard": true
     }
 }

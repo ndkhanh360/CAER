@@ -1,6 +1,8 @@
 import torch.nn as nn
 import torch.nn.functional as F
 from base import BaseModel
+from torchvision import models
+
 import torch 
 
 class CNN2DBlock(nn.Module):
@@ -37,22 +39,33 @@ class CNN2DBlock(nn.Module):
 
         return x 
 
+def get_resnet_face_encoder():
+    encoder = models.resnet50(pretrained=True)
+    encoder.fc = nn.Linear(2048, 256)
+    return encoder
+
 class TwoStreamNetwork(nn.Module):
-    def __init__(self, context=True, attention=True):
+    def __init__(self, use_resnet=False, context=True, attention=True):
         super().__init__()
-        self.face_encoding_module = CNN2DBlock(conv_num=5, cnn_num_kernels=[3, 32, 64, 128, 256, 256])
+        self.face_encoding_module = get_resnet_face_encoder() if use_resnet else CNN2DBlock(conv_num=5, cnn_num_kernels=[3, 32, 64, 128, 256, 256])
         self.context_encoding_module = CNN2DBlock(conv_num=5, cnn_num_kernels=[3, 32, 64, 128, 256, 256]) if context else None
         self.attention_inference_module = CNN2DBlock(conv_num=2, cnn_num_kernels=[256, 128, 1], maxpool=False) if attention else None
+        self.use_resnet = use_resnet
 
     def forward(self, face, context=None):
         face = self.face_encoding_module(face)
+        if self.use_resnet:
+            n = face.shape[0]
+            face = face.reshape(n, -1, 1, 1)
+
         if context is not None:
             context = self.context_encoding_module(context)
             if self.attention_inference_module is not None:
                 attention = self.attention_inference_module(context)
                 context = context * attention      
         face_size, context_size = face.shape[2], context.shape[2]
-        face = F.avg_pool2d(face, kernel_size=face_size)
+        if not self.use_resnet:
+            face = F.avg_pool2d(face, kernel_size=face_size)
         context = F.avg_pool2d(context, kernel_size=context_size)
 
         return face, context
@@ -86,9 +99,9 @@ class FusionNetwork(nn.Module):
         return features
 
 class CAERSNet(BaseModel):
-    def __init__(self, context=True, context_attention=True, fusion_attention=True):
+    def __init__(self, use_resnet=False, context=True, context_attention=True, fusion_attention=True):
         super().__init__()
-        self.two_stream_net = TwoStreamNetwork(context=context, attention=context_attention)
+        self.two_stream_net = TwoStreamNetwork(use_resnet=use_resnet, context=context, attention=context_attention)
         self.fusion_net = FusionNetwork(attention=fusion_attention)
 
     def forward(self, face, context=None):
@@ -98,4 +111,3 @@ class CAERSNet(BaseModel):
         features = features.view(N, K)
 
         return features
-
