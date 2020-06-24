@@ -39,6 +39,7 @@ class Trainer(BaseTrainer):
         start_epoch = time.time()
         self.model.train()
         self.train_metrics.reset()
+        print("Learning rate:", self.lr_scheduler.get_last_lr())
         for batch_idx, (inputs, labels) in enumerate(self.data_loader):
             # debugging
             # print('Classes: ', torch.unique(labels))
@@ -64,6 +65,10 @@ class Trainer(BaseTrainer):
                 self.writer.add_image('face', make_grid(face.cpu(), nrow=4, normalize=True))
                 self.writer.add_image('context', make_grid(context.cpu(), nrow=2, normalize=True))
 
+                for name, p in self.model.named_parameters():
+                    if p.requires_grad and p.grad is not None:
+                        self.writer.add_histogram('grad_' + name, p.grad, bins='auto')
+                        
             if batch_idx == self.len_epoch:
                 break
         log = self.train_metrics.result()
@@ -75,7 +80,7 @@ class Trainer(BaseTrainer):
         if self.lr_scheduler is not None:
             self.lr_scheduler.step()
         time_elapsed = time.time() - start_epoch
-        print('Epoch complete in {:.0f}m {:.0f}s'.format(
+        print('Epoch completes in {:.0f}m {:.0f}s'.format(
         time_elapsed // 60, time_elapsed % 60))
 
         return log

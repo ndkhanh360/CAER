@@ -1,8 +1,7 @@
 import argparse
 import torch
 from tqdm import tqdm
-from data_loader.data_loaders import DataLoaderGenerator
-
+import data_loader.data_loaders as module_data
 import model.loss as module_loss
 import model.metric as module_metric
 import model.model as module_arch
@@ -13,13 +12,11 @@ def main(config):
     logger = config.get_logger('test')
 
     # setup data_loader instances
-    print('Preparing test data...')
-    generator = DataLoaderGenerator(**config["test_loader"])
-    data_loader, class_to_idx = generator.get_loaders()
-    
-    print('Preparing model...')
+    data_loader = config.init_obj('test_loader', module_data)
+
     # build model architecture
     model = config.init_obj('arch', module_arch)
+    logger.info(model)
 
     # get function handles of loss and metrics
     loss_fn = getattr(module_loss, config['loss'])
@@ -40,21 +37,19 @@ def main(config):
     total_loss = 0.0
     total_metrics = torch.zeros(len(metric_fns))
 
-    n_samples = 0
     with torch.no_grad():
-        for i, (inputs, labels) in enumerate(tqdm(data_loader)):
-            face, context = inputs['face'].to(device), inputs['context'].to(device)
-            labels = labels.to(device)
+        for i, (data, target) in enumerate(tqdm(data_loader)):
+            face, context, target = data['face'].to(device), data['context'].to(device), target.to(device)
             output = model(face, context)
 
             # computing loss, metrics on test set
-            loss = loss_fn(output, labels)
-            batch_size = labels.shape[0]
+            loss = loss_fn(output, target)
+            batch_size = face.shape[0]
             total_loss += loss.item() * batch_size
-            n_samples += batch_size
             for i, metric in enumerate(metric_fns):
-                total_metrics[i] += metric(output, labels) * batch_size
+                total_metrics[i] += metric(output, target) * batch_size
 
+    n_samples = len(data_loader.sampler)
     log = {'loss': total_loss / n_samples}
     log.update({
         met.__name__: total_metrics[i].item() / n_samples for i, met in enumerate(metric_fns)
