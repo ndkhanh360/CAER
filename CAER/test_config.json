@@ -1,0 +1,29 @@
+{
+    "name": "CAERS_test_session",
+    "n_gpu": 1,
+    "arch": {
+        "type": "CAERSNet",
+        "args": {
+            "context": true,
+            "use_resnet": false,
+            "context_attention": true,
+            "fusion_attention": true
+        }
+    },
+    "test_loader": {
+        "type": "CAERSDataLoader",
+        "args":{
+            "root": "/content/CAER-master/CAER/data/CAER-S/test",
+            "detect_file": "/content/CAER-master/CAER/data/test.txt",
+            "use_resnet": false,
+            "train": false,
+            "batch_size": 32,
+            "shuffle": false,
+            "num_workers": 2
+        }
+    },
+    "loss": "cross_entropy",
+    "metrics": [
+        "accuracy"
+    ]
+}
