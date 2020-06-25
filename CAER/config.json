@@ -69,7 +69,7 @@
         "save_dir": "/content/drive/My Drive/Experiment/saved/",
         "save_period": 5,
         "verbosity": 2,
-        "monitor": "min val_loss",
+        "monitor": "max val_accuracy",
         "early_stop": 20,
         "tensorboard": true
     }
