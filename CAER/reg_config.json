@@ -49,12 +49,12 @@
         "type": "StepLR",
         "args": {
             "step_size": 15,
-            "gamma": 0.1
+            "gamma": 0.5
         }
     },
     "trainer": {
         "epochs": 60,
-        "save_dir": "saved/",
+        "save_dir": "/content/drive/My Drive/Experiment/saved/",
         "save_period": 5,
         "verbosity": 2,
         "monitor": "max val_accuracy",

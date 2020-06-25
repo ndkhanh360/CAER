@@ -65,8 +65,8 @@
         }
     },
     "trainer": {
-        "epochs": 50,
-        "save_dir": "saved/",
+        "epochs": 60,
+        "save_dir": "/content/drive/My Drive/Experiment/saved/",
         "save_period": 5,
         "verbosity": 2,
         "monitor": "min val_loss",
