@@ -1,11 +1,11 @@
 {
-    "name": "CAERS_orig_session",
+    "name": "CAERS_correct_session",
     "n_gpu": 1,
     "arch": {
         "type": "CAERSNet",
         "args": {
-            "context": true,
-            "use_resnet": false,
+            "use_context": true,
+            "use_face": true,
             "context_attention": true,
             "fusion_attention": true
         }
@@ -15,7 +15,6 @@
         "args":{
             "root": "/content/CAER-master/CAER/data/CAER-S/train",
             "detect_file": "/content/CAER-master/CAER/data/train.txt",
-            "use_resnet": false,
             "batch_size": 32,
             "shuffle": true,
             "num_workers": 2
@@ -26,7 +25,6 @@
         "args":{
             "root": "/content/CAER-master/CAER/data/CAER-S/test",
             "detect_file": "/content/CAER-master/CAER/data/val.txt",
-            "use_resnet": false,
             "train": false,
             "batch_size": 32,
             "shuffle": false,
@@ -55,7 +53,7 @@
     "trainer": {
         "epochs": 60,
         "save_dir": "/content/drive/My Drive/Experiment/saved/",
-        "save_period": 5,
+        "save_period": 10,
         "verbosity": 2,
         "monitor": "max val_accuracy",
         "early_stop": 20,

@@ -4,8 +4,8 @@
     "arch": {
         "type": "CAERSNet",
         "args": {
-            "context": true,
-            "use_resnet": false,
+            "use_context": true,
+            "use_face": true,
             "context_attention": true,
             "fusion_attention": true
         }
@@ -15,7 +15,6 @@
         "args":{
             "root": "/content/CAER-master/CAER/data/CAER-S/test",
             "detect_file": "/content/CAER-master/CAER/data/test.txt",
-            "use_resnet": false,
             "train": false,
             "batch_size": 32,
             "shuffle": false,

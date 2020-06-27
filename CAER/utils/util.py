@@ -101,9 +101,9 @@ class ToTensorAndNormalize(object):
             'context': normalize(toTensor(context)),
         }
 
-def get_transform(train=True, use_resnet=False):
+def get_transform(train=True):
     return transforms.Compose([
-        (ResizeFaceContext((224, (128, 171))) if use_resnet else ResizeFaceContext((96, (128, 171)))),
+        ResizeFaceContext((96, (128, 171))),
         (Crop(112, "train") if train else Crop(112, "test")),
         ToTensorAndNormalize()
     ])

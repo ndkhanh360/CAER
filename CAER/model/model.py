@@ -39,49 +39,70 @@ class CNN2DBlock(nn.Module):
 
         return x 
 
-def get_resnet_face_encoder():
-    encoder = models.resnet50(pretrained=True)
-    encoder.fc = nn.Linear(2048, 256)
-    return encoder
-
 class TwoStreamNetwork(nn.Module):
-    def __init__(self, use_resnet=False, context=True, attention=True):
+    def __init__(self, use_face=True, use_context=True, use_attention=True):
         super().__init__()
-        self.face_encoding_module = get_resnet_face_encoder() if use_resnet else CNN2DBlock(conv_num=5, cnn_num_kernels=[3, 32, 64, 128, 256, 256])
-        self.context_encoding_module = CNN2DBlock(conv_num=5, cnn_num_kernels=[3, 32, 64, 128, 256, 256]) if context else None
-        self.attention_inference_module = CNN2DBlock(conv_num=2, cnn_num_kernels=[256, 128, 1], maxpool=False) if attention else None
-        self.use_resnet = use_resnet
+        assert use_context or use_face
 
-    def forward(self, face, context=None):
-        face = self.face_encoding_module(face)
-        if self.use_resnet:
-            n = face.shape[0]
-            face = face.reshape(n, -1, 1, 1)
+        self.use_face = use_face
+        self.use_context = use_context
+        self.use_attention = use_attention
 
-        if context is not None:
+        if use_face: 
+            self.face_encoding_module = CNN2DBlock(conv_num=5, cnn_num_kernels=[3, 32, 64, 128, 256, 256])
+        if use_context:
+            self.context_encoding_module = CNN2DBlock(conv_num=5, cnn_num_kernels=[3, 32, 64, 128, 256, 256])
+            if use_attention:
+                self.attention_inference_module = CNN2DBlock(conv_num=2, cnn_num_kernels=[256, 128, 1], maxpool=False)
+
+    def forward(self, face=None, context=None):
+        assert face is not None or context is not None
+
+        if self.use_face:
+            face = self.face_encoding_module(face)
+            face = F.avg_pool2d(face, kernel_size=face.shape[2])
+
+        if self.use_context:
             context = self.context_encoding_module(context)
-            if self.attention_inference_module is not None:
+            if self.use_attention:
                 attention = self.attention_inference_module(context)
-                context = context * attention      
-        face_size, context_size = face.shape[2], context.shape[2]
-        if not self.use_resnet:
-            face = F.avg_pool2d(face, kernel_size=face_size)
-        context = F.avg_pool2d(context, kernel_size=context_size)
+                N, C, H, W = attention.shape 
+                attention = F.softmax(attention.reshape(N, C, -1), dim=2).reshape(N, C, H, W)
+                context = context * attention   
 
+            context = F.avg_pool2d(context, kernel_size=context.shape[2])          
+      
         return face, context
 
 class FusionNetwork(nn.Module):
-    def __init__(self, num_class=7, attention=True):
+    def __init__(self, use_face=True, use_context=True, num_class=7, use_attention=True):
         super().__init__()
-        self.face_stream_conv = CNN2DBlock(conv_num=2, cnn_num_kernels=[256, 128, 1], cnn_kernel_size=1, bn=False, relu=False, maxpool=False) if attention else None
-        self.context_stream_conv = CNN2DBlock(conv_num=2, cnn_num_kernels=[256, 128, 1], cnn_kernel_size=1, bn=False, relu=False, maxpool=False) if attention else None
 
-        self.conv1 = nn.Conv2d(256*2, 128, kernel_size=1)
+        # when attention is used, must provide both face and context
+        if use_attention:
+            assert use_face and use_context
+
+        self.use_face = use_face
+        self.use_context = use_context
+        self.use_attention = use_attention
+
+        if use_attention:
+            # only compute weight if fusion attention is used
+            self.face_stream_conv = CNN2DBlock(conv_num=2, cnn_num_kernels=[256, 128, 1], cnn_kernel_size=1, bn=False, relu=False, maxpool=False)
+            self.context_stream_conv = CNN2DBlock(conv_num=2, cnn_num_kernels=[256, 128, 1], cnn_kernel_size=1, bn=False, relu=False, maxpool=False)
+        
+        # when using both face and context, input to conv layer has shape 1x1x(256*2), otherwise, the shape is 1x1x256
+        self.conv1 = nn.Conv2d(256*2, 128, kernel_size=1) if (use_face and use_context) else nn.Conv2d(256, 128, kernel_size=1)
         self.conv2 = nn.Conv2d(128, num_class, kernel_size=1)
         self.dropout = nn.Dropout2d()
 
-    def forward(self, face, context):
-        if self.face_stream_conv is not None and self.context_stream_conv is not None:
+    def forward(self, face=None, context=None):
+        assert face is not None or context is not None
+        # when attention is used, must provide both face and context
+        if self.use_attention:
+            assert face is not None and context is not None
+
+            # compute weights
             face_weights = self.face_stream_conv(face)
             context_weights = self.context_stream_conv(context)
 
@@ -91,7 +112,13 @@ class FusionNetwork(nn.Module):
             face = face * weights[:, 0, :].unsqueeze(dim=1)
             context = context * weights[:, 1, :].unsqueeze(dim=1)
 
-        features = torch.cat([face, context], dim=1)
+        if self.use_context and self.use_face:
+            features = torch.cat([face, context], dim=1)
+        elif self.use_face:
+            features = face 
+        else:
+            features = context 
+
         features = F.relu(self.conv1(features))
         features = self.dropout(features)
         features = self.conv2(features)
@@ -99,12 +126,12 @@ class FusionNetwork(nn.Module):
         return features
 
 class CAERSNet(BaseModel):
-    def __init__(self, use_resnet=False, context=True, context_attention=True, fusion_attention=True):
+    def __init__(self, use_face=True, use_context=True, context_attention=True, fusion_attention=True):
         super().__init__()
-        self.two_stream_net = TwoStreamNetwork(use_resnet=use_resnet, context=context, attention=context_attention)
-        self.fusion_net = FusionNetwork(attention=fusion_attention)
+        self.two_stream_net = TwoStreamNetwork(use_face, use_context, context_attention)
+        self.fusion_net = FusionNetwork(use_face, use_context, use_attention=fusion_attention)
 
-    def forward(self, face, context=None):
+    def forward(self, face=None, context=None):
         face, context = self.two_stream_net(face, context)
         features = self.fusion_net(face, context)
         N, K = features.shape[:2]
