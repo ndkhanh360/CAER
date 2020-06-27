@@ -24,7 +24,7 @@
     "val_loader": {
         "type": "CAERSDataLoader",
         "args":{
-            "root": "/content/CAER-master/CAER/data/CAER-S/train",
+            "root": "/content/CAER-master/CAER/data/CAER-S/test",
             "detect_file": "/content/CAER-master/CAER/data/val.txt",
             "use_resnet": false,
             "train": false,

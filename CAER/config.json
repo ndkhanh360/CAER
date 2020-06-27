@@ -24,20 +24,8 @@
     "val_loader": {
         "type": "CAERSDataLoader",
         "args":{
-            "root": "/content/CAER-master/CAER/data/CAER-S/train",
-            "detect_file": "/content/CAER-master/CAER/data/val.txt",
-            "use_resnet": false,
-            "train": false,
-            "batch_size": 32,
-            "shuffle": false,
-            "num_workers": 2
-        }
-    },
-    "test_loader": {
-        "type": "CAERSDataLoader",
-        "args":{
             "root": "/content/CAER-master/CAER/data/CAER-S/test",
-            "detect_file": "/content/CAER-master/CAER/data/test.txt",
+            "detect_file": "/content/CAER-master/CAER/data/val.txt",
             "use_resnet": false,
             "train": false,
             "batch_size": 32,
