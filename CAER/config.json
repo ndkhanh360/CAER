@@ -1,14 +1,9 @@
 {
-    "name": "CAERS_correct_session",
+    "name": "CAERS_NhatLe_session",
     "n_gpu": 1,
     "arch": {
         "type": "CAERSNet",
-        "args": {
-            "use_context": true,
-            "use_face": true,
-            "context_attention": true,
-            "fusion_attention": true
-        }
+        "args": {}
     },
     "train_loader": {
         "type": "CAERSDataLoader",
