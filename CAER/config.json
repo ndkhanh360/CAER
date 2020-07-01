@@ -29,7 +29,7 @@
     "optimizer": {
         "type": "Adam",
         "args":{
-            "lr": 1e-4,
+            "lr": 5e-5,
             "weight_decay": 0,
             "amsgrad": true
         }
@@ -41,12 +41,12 @@
     "lr_scheduler": {
         "type": "StepLR",
         "args": {
-            "step_size": 15,
+            "step_size": 10,
             "gamma": 0.5
         }
     },
     "trainer": {
-        "epochs": 60,
+        "epochs": 40,
         "save_dir": "/content/drive/My Drive/Experiment/saved/",
         "save_period": 10,
         "verbosity": 2,

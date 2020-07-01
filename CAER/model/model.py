@@ -71,7 +71,7 @@ class FusionNetwork(nn.Module):
         weights = F.softmax(weights, dim=1)
 
         face = face *  weights[:, 0].unsqueeze(dim=-1)
-        context = face * weights[:, 1].unsqueeze(dim=-1)
+        context = context * weights[:, 1].unsqueeze(dim=-1)
         
         features = torch.cat([face, context], dim=-1)
         features = F.relu(self.fc1(features))
