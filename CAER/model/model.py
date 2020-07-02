@@ -46,20 +46,22 @@ class TwoStreamNetwork(nn.Module):
 class FusionNetwork(nn.Module):
     def __init__(self, num_class=7):
         super().__init__()
-        self.face_1 = nn.Linear(256, 128)
+        self.face_1 = nn.Linear(256*9, 128)
         self.face_2 = nn.Linear(128, 1)
 
-        self.context_1 = nn.Linear(256, 128)
+        self.context_1 = nn.Linear(256*9, 128)
         self.context_2 = nn.Linear(128, 1)
 
-        self.fc1 = nn.Linear(512, 128)
+        self.fc1 = nn.Linear(512*9, 128)
         self.fc2 = nn.Linear(128, num_class)
 
         self.dropout = nn.Dropout()
     
     def forward(self, face, context):
-        face = F.avg_pool2d(face, face.shape[2]).reshape(face.shape[0], -1)
-        context = F.avg_pool2d(context, context.shape[2]).reshape(context.shape[0], -1)
+        # face = F.avg_pool2d(face, face.shape[2]).reshape(face.shape[0], -1)
+        # context = F.avg_pool2d(context, context.shape[2]).reshape(context.shape[0], -1)
+        face = face.reshape(face.shape[0], -1)
+        context = context.reshape(context.shape[0], -1)
 
         lambda_f = F.relu(self.face_1(face))
         lambda_c = F.relu(self.context_1(context))
