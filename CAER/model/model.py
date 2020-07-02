@@ -55,7 +55,8 @@ class FusionNetwork(nn.Module):
         self.fc1 = nn.Linear(512*9, 128)
         self.fc2 = nn.Linear(128, num_class)
 
-        self.dropout = nn.Dropout()
+        self.dropout1 = nn.Dropout()
+        self.dropout2 = nn.Dropout()
     
     def forward(self, face, context):
         # face = F.avg_pool2d(face, face.shape[2]).reshape(face.shape[0], -1)
@@ -76,9 +77,11 @@ class FusionNetwork(nn.Module):
         context = context * weights[:, 1].unsqueeze(dim=-1)
         
         features = torch.cat([face, context], dim=-1)
+        features = self.dropout1(features)
+
         features = F.relu(self.fc1(features))
 
-        features = self.dropout(features)
+        features = self.dropout2(features)
 
         return self.fc2(features)
 
