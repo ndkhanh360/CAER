@@ -30,13 +30,18 @@ class TwoStreamNetwork(nn.Module):
         num_kernels = [3, 32, 64, 128, 256, 256]
         self.face_encoding_module = Encoder(num_kernels)
         self.context_encoding_module = Encoder(num_kernels)
-        self.attention_inference_module = Encoder([256, 128, 1], max_pool=False)
+        self.context_attention_inference_module = Encoder([256, 128, 1], max_pool=False)
+        self.face_attention_inference_module = Encoder([256, 128, 1], max_pool=False)
     
     def forward(self, face, context):
         face = self.face_encoding_module(face)
-              
+        attention = self.face_attention_inference_module(face)
+        N, C, H, W = attention.shape
+        attention = F.softmax(attention.reshape(N, C, -1), dim=2).reshape(N, C, H, W)
+        face = face * attention
+
         context = self.context_encoding_module(context)
-        attention = self.attention_inference_module(context)
+        attention = self.context_attention_inference_module(context)
         N, C, H, W = attention.shape
         attention = F.softmax(attention.reshape(N, C, -1), dim=2).reshape(N, C, H, W)
         context = context * attention 
@@ -95,3 +100,5 @@ class CAERSNet(BaseModel):
         face, context = self.two_stream_net(face, context)
 
         return self.fusion_net(face, context)
+
+
