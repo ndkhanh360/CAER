@@ -7,6 +7,7 @@
             "fine_tune": false
         }
     },
+    "resume": "/content/drive/My Drive/Experiment/saved/models/CAERS_facereg_session/0708_135811/model_best.pth",
     "train_loader": {
         "type": "CAERSDataLoader",
         "args":{
@@ -31,7 +32,7 @@
     "optimizer": {
         "type": "Adam",
         "args":{
-            "lr": 5e-3,
+            "lr": 1e-4,
             "weight_decay": 0,
             "amsgrad": true
         }
@@ -43,7 +44,7 @@
     "lr_scheduler": {
         "type": "StepLR",
         "args": {
-            "step_size": 5,
+            "step_size": 10,
             "gamma": 0.5
         }
     },
@@ -54,6 +55,6 @@
         "verbosity": 2,
         "monitor": "max val_accuracy",
         "early_stop": 20,
-        "tensorboard": true
+        "tensorboard": false
     }
 }

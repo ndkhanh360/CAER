@@ -26,6 +26,13 @@ def main(config):
     # build model architecture, then print to console
     model = config.init_obj('arch', module_arch)
     logger.info(model)
+    try:
+        path = config['resume']
+        print('Loading checkpoint', path)
+        cp = torch.load(path)
+        model.load_state_dict(cp['state_dict'])
+    except:
+        path
 
     # get function handles of loss and metrics
     criterion = getattr(module_loss, config['loss'])

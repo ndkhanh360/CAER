@@ -38,9 +38,11 @@ class TwoStreamNetwork(nn.Module):
         self.face_encoding_module = InceptionResnetV1(pretrained='vggface2')
         self.face_encoding_module.logits = Identity()
 
-        for param in self.face_encoding_module.parameters():
+        for name, param in self.face_encoding_module.named_parameters():
             param.requires_grad = fine_tune
-    
+            if name.startswith('block8'):
+                param.requires_grad = True 
+
         self.context_encoding_module = Encoder(num_kernels)
         self.context_attention_inference_module = Encoder([512, 64, 1], max_pool=False)
     
@@ -100,8 +102,9 @@ class CAERSNet(BaseModel):
         super().__init__()
         self.two_stream_net = TwoStreamNetwork(fine_tune)
         self.fusion_net = FusionNetwork()
-
+          
     def forward(self, face=None, context=None):
         face, context = self.two_stream_net(face, context)
 
         return self.fusion_net(face, context)
+
