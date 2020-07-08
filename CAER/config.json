@@ -1,15 +1,17 @@
 {
-    "name": "CAERS_NhatLe_session",
+    "name": "CAERS_facereg_session",
     "n_gpu": 1,
     "arch": {
         "type": "CAERSNet",
-        "args": {}
+        "args": {
+            "fine_tune": false
+        }
     },
     "train_loader": {
         "type": "CAERSDataLoader",
         "args":{
-            "root": "/content/CAER-master/CAER/data/CAER-S/train",
-            "detect_file": "/content/CAER-master/CAER/data/train.txt",
+            "root": "/content/CAER-S/train",
+            "detect_file": "/content/train.txt",
             "batch_size": 32,
             "shuffle": true,
             "num_workers": 2
@@ -18,8 +20,8 @@
     "val_loader": {
         "type": "CAERSDataLoader",
         "args":{
-            "root": "/content/CAER-master/CAER/data/CAER-S/test",
-            "detect_file": "/content/CAER-master/CAER/data/val.txt",
+            "root": "/content/CAER-S/test",
+            "detect_file": "/content/val.txt",
             "train": false,
             "batch_size": 32,
             "shuffle": false,
@@ -29,7 +31,7 @@
     "optimizer": {
         "type": "Adam",
         "args":{
-            "lr": 5e-5,
+            "lr": 5e-3,
             "weight_decay": 0,
             "amsgrad": true
         }
@@ -41,7 +43,7 @@
     "lr_scheduler": {
         "type": "StepLR",
         "args": {
-            "step_size": 10,
+            "step_size": 5,
             "gamma": 0.5
         }
     },

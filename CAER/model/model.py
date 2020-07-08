@@ -32,11 +32,15 @@ class Identity(nn.Module):
         return x
 
 class TwoStreamNetwork(nn.Module):
-    def __init__(self):
+    def __init__(self, fine_tune=True):
         super().__init__()
         num_kernels = [3, 32, 64, 128, 256, 512]
         self.face_encoding_module = InceptionResnetV1(pretrained='vggface2')
         self.face_encoding_module.logits = Identity()
+
+        for param in self.face_encoding_module.parameters():
+            param.requires_grad = fine_tune
+    
         self.context_encoding_module = Encoder(num_kernels)
         self.context_attention_inference_module = Encoder([512, 64, 1], max_pool=False)
     
@@ -68,7 +72,7 @@ class FusionNetwork(nn.Module):
     def forward(self, face, context):
         # face = F.avg_pool2d(face, face.shape[2]).reshape(face.shape[0], -1)
         context = F.avg_pool2d(context, context.shape[2]).reshape(context.shape[0], -1)
-        face = face.reshape(face.shape[0], -1)
+        # face = face.reshape(face.shape[0], -1)
         # context = context.reshape(context.shape[0], -1)
 
         lambda_f = F.relu(self.face_1(face))
@@ -92,9 +96,9 @@ class FusionNetwork(nn.Module):
         return self.fc2(features)
 
 class CAERSNet(BaseModel):
-    def __init__(self):
+    def __init__(self, fine_tune=True):
         super().__init__()
-        self.two_stream_net = TwoStreamNetwork()
+        self.two_stream_net = TwoStreamNetwork(fine_tune)
         self.fusion_net = FusionNetwork()
 
     def forward(self, face=None, context=None):
