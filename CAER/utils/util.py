@@ -103,7 +103,7 @@ class ToTensorAndNormalize(object):
 
 def get_transform(train=True):
     return transforms.Compose([
-        ResizeFaceContext((96, (128, 171))),
+        ResizeFaceContext((160, (128, 171))),
         (Crop(112, "train") if train else Crop(112, "test")),
         ToTensorAndNormalize()
     ])

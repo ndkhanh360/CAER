@@ -1,7 +1,7 @@
 import torch.nn as nn
 import torch.nn.functional as F
 from base import BaseModel
-
+from facenet_pytorch import InceptionResnetV1
 import torch
 
 class Encoder(nn.Module):
@@ -24,21 +24,24 @@ class Encoder(nn.Module):
                 x = self.max_pool(x)
         return x
 
+class Identity(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, x):
+        return x
+
 class TwoStreamNetwork(nn.Module):
     def __init__(self):
         super().__init__()
-        num_kernels = [3, 32, 64, 128, 256, 256]
-        self.face_encoding_module = Encoder(num_kernels)
+        num_kernels = [3, 32, 64, 128, 256, 512]
+        self.face_encoding_module = InceptionResnetV1(pretrained='vggface2')
+        self.face_encoding_module.logits = Identity()
         self.context_encoding_module = Encoder(num_kernels)
-        self.context_attention_inference_module = Encoder([256, 128, 1], max_pool=False)
-        self.face_attention_inference_module = Encoder([256, 128, 1], max_pool=False)
+        self.context_attention_inference_module = Encoder([512, 64, 1], max_pool=False)
     
     def forward(self, face, context):
-        face = self.face_encoding_module(face)
-        attention = self.face_attention_inference_module(face)
-        N, C, H, W = attention.shape
-        attention = F.softmax(attention.reshape(N, C, -1), dim=2).reshape(N, C, H, W)
-        face = face * attention
+        face = self.face_encoding_module(face) # N, 512
 
         context = self.context_encoding_module(context)
         attention = self.context_attention_inference_module(context)
@@ -51,23 +54,22 @@ class TwoStreamNetwork(nn.Module):
 class FusionNetwork(nn.Module):
     def __init__(self, num_class=7):
         super().__init__()
-        self.face_1 = nn.Linear(256*9, 128)
+        self.face_1 = nn.Linear(512, 128)
         self.face_2 = nn.Linear(128, 1)
 
-        self.context_1 = nn.Linear(256*9, 128)
+        self.context_1 = nn.Linear(512, 128)
         self.context_2 = nn.Linear(128, 1)
 
-        self.fc1 = nn.Linear(512*9, 128)
+        self.fc1 = nn.Linear(512*2, 128)
         self.fc2 = nn.Linear(128, num_class)
 
-        self.dropout1 = nn.Dropout()
-        self.dropout2 = nn.Dropout()
+        self.dropout = nn.Dropout()
     
     def forward(self, face, context):
         # face = F.avg_pool2d(face, face.shape[2]).reshape(face.shape[0], -1)
-        # context = F.avg_pool2d(context, context.shape[2]).reshape(context.shape[0], -1)
+        context = F.avg_pool2d(context, context.shape[2]).reshape(context.shape[0], -1)
         face = face.reshape(face.shape[0], -1)
-        context = context.reshape(context.shape[0], -1)
+        # context = context.reshape(context.shape[0], -1)
 
         lambda_f = F.relu(self.face_1(face))
         lambda_c = F.relu(self.context_1(context))
@@ -82,11 +84,10 @@ class FusionNetwork(nn.Module):
         context = context * weights[:, 1].unsqueeze(dim=-1)
         
         features = torch.cat([face, context], dim=-1)
-        features = self.dropout1(features)
 
         features = F.relu(self.fc1(features))
 
-        features = self.dropout2(features)
+        features = self.dropout(features)
 
         return self.fc2(features)
 
@@ -100,5 +101,3 @@ class CAERSNet(BaseModel):
         face, context = self.two_stream_net(face, context)
 
         return self.fusion_net(face, context)
-
-
