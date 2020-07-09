@@ -4,13 +4,17 @@
 
     "arch": {
         "type": "ResNet",
-        "args": {}
+        "args": {
+            "path": "/content/drive/My Drive/Experiment/ijba_res18_naive.pth.tar",
+            "fine_tune": false,
+            "drop_out": true
+        }
     },
     "train_loader": {
         "type": "CAERSDataLoader",
         "args":{
-            "root": "data/CAER-S/train",
-            "detect_file": "data/train.txt",
+            "root": "/content/CAER-S/train",
+            "detect_file": "/content/train.txt",
             "batch_size": 32,
             "shuffle": true,
             "validation_split": 0.125,
@@ -20,8 +24,8 @@
     "test_loader": {
         "type": "CAERSDataLoader",
         "args":{
-            "root": "data/CAER-S/test",
-            "detect_file": "data/test.txt",
+            "root": "/content/CAER-S/test",
+            "detect_file": "/content/test.txt",
             "shuffle": false,
             "batch_size": 32,
             "num_workers": 2
@@ -31,8 +35,7 @@
         "type": "Adam",
         "args":{
             "lr": 1e-4,
-            "weight_decay": 0,
-            "amsgrad": true
+            "weight_decay": 0
         }
     },
     "loss": "cross_entropy",
@@ -47,15 +50,15 @@
         }
     },
     "trainer": {
-        "epochs": 50,
+        "epochs": 10,
 
-        "save_dir": "saved/",
-        "save_period": 2,
+        "save_dir": "/content/drive/My Drive/Experiment/saved",
+        "save_period": 5,
         "verbosity": 2,
         
-        "monitor": "min val_loss",
+        "monitor": "max val_accuracy",
         "early_stop": 5,
 
-        "tensorboard": true
+        "tensorboard": false
     }
 }
