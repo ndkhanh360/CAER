@@ -1,7 +1,8 @@
 import torch.nn as nn
 import torch.nn.functional as F
 from base import BaseModel
-from facenet_pytorch import InceptionResnetV1
+import torch
+from torchvision.models import resnet18
 import torch
 
 class Encoder(nn.Module):
@@ -32,16 +33,29 @@ class Identity(nn.Module):
         return x
 
 class TwoStreamNetwork(nn.Module):
-    def __init__(self, fine_tune=True):
+    def __init__(self, fine_tune=True, path=None):
         super().__init__()
+        assert path is not None 
         num_kernels = [3, 32, 64, 128, 256, 512]
-        self.face_encoding_module = InceptionResnetV1(pretrained='vggface2')
-        self.face_encoding_module.logits = Identity()
 
-        for name, param in self.face_encoding_module.named_parameters():
+        print('Loading checkpoints from pretrained...')
+        checkpoint = torch.load(path)
+        self.face_encoding_module = resnet18()
+
+        pretrained_state_dict = checkpoint['state_dict']
+        model_state_dict = self.face_encoding_module.state_dict()
+        for key in pretrained_state_dict:
+            if  ((key=='module.fc.weight')|(key=='module.fc.bias')):
+                pass
+            else:    
+                new_key = key[7:]
+                if new_key in model_state_dict.keys():
+                    model_state_dict[new_key] = pretrained_state_dict[key]
+        self.face_encoding_module.load_state_dict(model_state_dict)  
+        self.face_encoding_module.fc = Identity()
+
+        for param in self.face_encoding_module.parameters():
             param.requires_grad = fine_tune
-            if name.startswith('block8'):
-                param.requires_grad = True 
 
         self.context_encoding_module = Encoder(num_kernels)
         self.context_attention_inference_module = Encoder([512, 64, 1], max_pool=False)
@@ -98,13 +112,13 @@ class FusionNetwork(nn.Module):
         return self.fc2(features)
 
 class CAERSNet(BaseModel):
-    def __init__(self, fine_tune=True):
+    def __init__(self, fine_tune=True, path=None):
         super().__init__()
-        self.two_stream_net = TwoStreamNetwork(fine_tune)
+        assert path is not None 
+        self.two_stream_net = TwoStreamNetwork(fine_tune, path)
         self.fusion_net = FusionNetwork()
           
     def forward(self, face=None, context=None):
         face, context = self.two_stream_net(face, context)
 
         return self.fusion_net(face, context)
-
