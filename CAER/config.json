@@ -1,13 +1,13 @@
 {
-    "name": "CAERS_resnet_session",
+    "name": "CAERS_resnet_fine_tune_session",
     "n_gpu": 1,
     "arch": {
         "type": "CAERSNet",
         "args": {
-            "fine_tune": false, 
-            "path": "/content/ijba_res18_naive.pth"
+            "fine_tune": false
         }
     },
+    "resume": "best_model.pth",
     "train_loader": {
         "type": "CAERSDataLoader",
         "args":{
@@ -33,7 +33,7 @@
         "type": "Adam",
         "args":{
             "lr": 1e-4,
-            "weight_decay": 1e-4
+            "weight_decay": 1e-3
         }
     },
     "loss": "cross_entropy",

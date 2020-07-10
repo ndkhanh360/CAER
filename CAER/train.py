@@ -32,7 +32,7 @@ def main(config):
         cp = torch.load(path)
         model.load_state_dict(cp['state_dict'])
     except:
-        path
+        pass
 
     # get function handles of loss and metrics
     criterion = getattr(module_loss, config['loss'])
