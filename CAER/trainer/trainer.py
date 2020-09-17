@@ -39,7 +39,7 @@ class Trainer(BaseTrainer):
         start_epoch = time.time()
         self.model.train()
         self.train_metrics.reset()
-        print("Learning rate:", self.lr_scheduler.get_last_lr())
+        # print("Learning rate:", self.lr_scheduler.get_lr())
         for batch_idx, (inputs, labels) in enumerate(self.data_loader):
             # debugging
             # print('Classes: ', torch.unique(labels))

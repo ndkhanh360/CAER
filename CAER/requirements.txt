@@ -1,4 +1,6 @@
-torchvision
-torch
-tqdm
-tensorboard
+tqdm==4.49.0
+torch==1.5.0
+numpy==1.19.1
+torchvision==0.6.0
+pandas==1.1.2
+Pillow==7.2.0

@@ -8,7 +8,6 @@ from collections import OrderedDict
 import torchvision 
 from torchvision import transforms
 import torchvision.datasets as dset
-import cv2
 import torch 
 from torch.utils.data import Dataset
 from torchvision.datasets import ImageFolder

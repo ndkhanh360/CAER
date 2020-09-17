@@ -1,5 +1,5 @@
 {
-    "name": "CAERS_NhatLe_session",
+    "name": "CAERS_original_debug",
     "n_gpu": 1,
     "arch": {
         "type": "CAERSNet",
@@ -8,8 +8,8 @@
     "train_loader": {
         "type": "CAERSDataLoader",
         "args":{
-            "root": "/content/CAER-master/CAER/data/CAER-S/train",
-            "detect_file": "/content/CAER-master/CAER/data/train.txt",
+            "root": "/home/khanh/CAER/data/CAER-S/train",
+            "detect_file": "/home/khanh/CAER/data/CAER-S/debug_train.txt",
             "batch_size": 32,
             "shuffle": true,
             "num_workers": 2
@@ -18,8 +18,8 @@
     "val_loader": {
         "type": "CAERSDataLoader",
         "args":{
-            "root": "/content/CAER-master/CAER/data/CAER-S/test",
-            "detect_file": "/content/CAER-master/CAER/data/val.txt",
+            "root": "/home/khanh/CAER/data/CAER-S/test",
+            "detect_file": "/home/khanh/CAER/data/CAER-S/debug_val.txt",
             "train": false,
             "batch_size": 32,
             "shuffle": false,
@@ -27,11 +27,11 @@
         }
     },
     "optimizer": {
-        "type": "Adam",
+        "type": "SGD",
         "args":{
-            "lr": 5e-5,
-            "weight_decay": 0,
-            "amsgrad": true
+            "lr": 5e-3,
+            "momentum": 0.9,
+            "nesterov": true
         }
     },
     "loss": "cross_entropy",
@@ -41,17 +41,17 @@
     "lr_scheduler": {
         "type": "StepLR",
         "args": {
-            "step_size": 10,
+            "step_size": 15,
             "gamma": 0.5
         }
     },
     "trainer": {
-        "epochs": 40,
-        "save_dir": "/content/drive/My Drive/Experiment/saved/",
+        "epochs": 80,
+        "save_dir": "/home/khanh/CAER/CAER/saved",
         "save_period": 10,
         "verbosity": 2,
         "monitor": "max val_accuracy",
-        "early_stop": 20,
+        "early_stop": 40,
         "tensorboard": true
     }
 }
