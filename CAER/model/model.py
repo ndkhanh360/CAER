@@ -50,10 +50,11 @@ class TwoStreamNetwork(nn.Module):
 
 
 class FusionNetwork(nn.Module):
-    def __init__(self, num_class=7):
+    def __init__(self, use_face=True, use_context=True, concat=False, num_class=7):
         super().__init__()
-        # do they use batch norm after ReLU ??
-        # do they use ReLU ? 
+
+        self.use_face, self.use_context = use_face, use_context
+        self.concat = concat
 
         self.face_1 = nn.Linear(256, 128)
         self.face_2 = nn.Linear(128, 1)
@@ -69,16 +70,24 @@ class FusionNetwork(nn.Module):
     def forward(self, face, context):
         face = F.avg_pool2d(face, face.shape[2]).view(face.shape[0], -1)
         context = F.avg_pool2d(context, context.shape[2]).view(context.shape[0], -1)
-        lambda_f = F.relu(self.face_1(face))
-        lambda_c = F.relu(self.context_1(context))
 
-        lambda_f = self.face_2(lambda_f)
-        lambda_c = self.context_2(lambda_c)
+        if not self.concat:
+            lambda_f = F.relu(self.face_1(face))
+            lambda_c = F.relu(self.context_1(context))
 
-        weights = torch.cat([lambda_f, lambda_c], dim=-1)
-        weights = F.softmax(weights, dim=-1)
-        face = face * weights[:, 0].unsqueeze(dim=-1)
-        context = context * weights[:, 1].unsqueeze(dim=-1)
+            lambda_f = self.face_2(lambda_f)
+            lambda_c = self.context_2(lambda_c)
+
+            weights = torch.cat([lambda_f, lambda_c], dim=-1)
+            weights = F.softmax(weights, dim=-1)
+            face = face * weights[:, 0].unsqueeze(dim=-1)
+            context = context * weights[:, 1].unsqueeze(dim=-1)
+
+        if not self.use_face:
+            face = torch.zeros_like(face)
+
+        if not self.use_context:
+            context = torch.zeros_like(context)
 
         features = torch.cat([face, context], dim=-1)
         features = F.relu(self.fc1(features))
@@ -88,11 +97,10 @@ class FusionNetwork(nn.Module):
 
 
 class CAERSNet(BaseModel):
-# class CAERSNet(nn.Module):
-    def __init__(self):
+    def __init__(self, use_face=True, use_context=True, concat=False):
         super().__init__()
         self.two_stream_net = TwoStreamNetwork()
-        self.fusion_net = FusionNetwork()
+        self.fusion_net = FusionNetwork(use_face, use_context, concat)
 
     def forward(self, face=None, context=None):
         face, context = self.two_stream_net(face, context)
