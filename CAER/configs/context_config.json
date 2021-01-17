@@ -1,35 +1,38 @@
 {
-    "name": "CAERS_original_debug",
+    "name": "CAERS_context",
     "n_gpu": 1,
     "arch": {
         "type": "CAERSNet",
-        "args": {}
+        "args": {
+            "concat": true,
+            "use_face": false
+        }
     },
     "train_loader": {
         "type": "CAERSDataLoader",
         "args":{
-            "root": "/home/khanh/CAER/data/CAER-S/train",
-            "detect_file": "/home/khanh/CAER/data/CAER-S/debug_train.txt",
-            "batch_size": 32,
+            "root": "../data/CAER-S/train",
+            "detect_file": "../data/train.txt",
+            "batch_size": 128,
             "shuffle": true,
-            "num_workers": 2
+            "num_workers": 4
         }
     },
     "val_loader": {
         "type": "CAERSDataLoader",
         "args":{
-            "root": "/home/khanh/CAER/data/CAER-S/test",
-            "detect_file": "/home/khanh/CAER/data/CAER-S/debug_val.txt",
+            "root": "../data/CAER-S/test",
+            "detect_file": "../data/val.txt",
             "train": false,
-            "batch_size": 32,
+            "batch_size": 128,
             "shuffle": false,
-            "num_workers": 2
+            "num_workers": 4
         }
     },
     "optimizer": {
         "type": "SGD",
         "args":{
-            "lr": 5e-3,
+            "lr": 1e-2,
             "momentum": 0.9,
             "nesterov": true
         }
@@ -46,8 +49,8 @@
         }
     },
     "trainer": {
-        "epochs": 80,
-        "save_dir": "/home/khanh/CAER/CAER/saved",
+        "epochs": 150,
+        "save_dir": "saved",
         "save_period": 10,
         "verbosity": 2,
         "monitor": "max val_accuracy",

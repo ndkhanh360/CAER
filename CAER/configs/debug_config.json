@@ -1,0 +1,57 @@
+{
+    "name": "CAERS_debug",
+    "n_gpu": 1,
+    "arch": {
+        "type": "CAERSNet",
+        "args": {}
+    },
+    "train_loader": {
+        "type": "CAERSDataLoader",
+        "args":{
+            "root": "../data/CAER-S/train",
+            "detect_file": "../data/debug_train.txt",
+            "batch_size": 32,
+            "shuffle": true,
+            "num_workers": 4
+        }
+    },
+    "val_loader": {
+        "type": "CAERSDataLoader",
+        "args":{
+            "root": "../data/CAER-S/train",
+            "detect_file": "../data/debug_val.txt",
+            "train": false,
+            "batch_size": 32,
+            "shuffle": false,
+            "num_workers": 4
+        }
+    },
+    "optimizer": {
+        "type": "SGD",
+        "args":{
+            "lr": 5e-3,
+            "momentum": 0.9,
+            "nesterov": true
+        }
+    },
+    "loss": "cross_entropy",
+    "metrics": [
+        "accuracy"
+    ],
+    "lr_scheduler": {
+        "type": "StepLR",
+        "args": {
+            "step_size": 15,
+            "gamma": 0.5
+        }
+    },
+    "trainer": {
+        "epochs": 80,
+        "save_dir": "saved",
+        "save_period": 10,
+        "verbosity": 2,
+        "monitor": "max val_accuracy",
+        "early_stop": 40,
+        "tensorboard": true
+    }
+}

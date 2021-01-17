@@ -52,6 +52,10 @@ class TwoStreamNetwork(nn.Module):
 class FusionNetwork(nn.Module):
     def __init__(self, use_face=True, use_context=True, concat=False, num_class=7):
         super().__init__()
+        # add batch norm to ensure the mean and std of 
+        # face and context features are not too different
+        self.face_bn = nn.BatchNorm1d(256)
+        self.context_bn = nn.BatchNorm1d(256)
 
         self.use_face, self.use_context = use_face, use_context
         self.concat = concat
@@ -70,6 +74,9 @@ class FusionNetwork(nn.Module):
     def forward(self, face, context):
         face = F.avg_pool2d(face, face.shape[2]).view(face.shape[0], -1)
         context = F.avg_pool2d(context, context.shape[2]).view(context.shape[0], -1)
+
+        # add batch norm for face and context branch
+        face, context = self.face_bn(face), self.context_bn(context)
 
         if not self.concat:
             lambda_f = F.relu(self.face_1(face))
